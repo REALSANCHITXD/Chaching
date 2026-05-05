@@ -119,5 +119,13 @@ TradingBot/
     └── dashboard.html         # UI template
 ```
 
+## 🗺️ Roadmap & Future Enhancements
+The architecture is specifically designed to be extensible. Planned future modules include:
+- **🗄️ Permanent Database Integration:** Hooking up PostgreSQL/SQLAlchemy to persist historical trade logs and equity curves.
+- **⚡ WebSockets Upgrade:** Transitioning from REST polling to Binance/Alpaca WebSockets for zero-latency streaming tick data.
+- **🌍 Global Markets Integration:** Adding new `data_sources` to tap into the London Stock Exchange (LSE) and Singapore Exchange (SGX) for cross-border arbitrage.
+- **🧠 Custom ML Models:** Training an LSTM neural network in PyTorch for predictive volume analysis to supersede standard MACD indicators.
+- **⏪ Historical Backtesting Engine:** A standalone script to simulate the `decision_engine` logic over 5 years of historical data.
+
 ## ⚠️ Disclaimer
 IMPORTANT: This application is for educational and research purposes only. It is NOT financial advice. The `live_trading` modes will execute real financial transactions using your connected brokerage accounts. Use at your own risk.
