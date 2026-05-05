@@ -11,11 +11,11 @@ An advanced, event-driven algorithmic trading bot built in Python. This engine p
 - **🎯 Dynamic Risk Management:** Automatically sizes positions based on risk ceilings and executes strict stop-loss/take-profit parameters.
 - **💻 Modern UI:** Beautiful, decoupled local dashboard built with Flask and Chart.js for real-time WebSocket-style tracking.
 
-## 📈 Backtesting Results (Resume Highlights)
-The algorithm's architecture has been strictly tested against historical datasets to ensure capital preservation and optimized risk-adjusted returns:
-- **Sharpe Ratio:** `1.84` *(Demonstrates highly efficient risk-adjusted returns)*
-- **Max Drawdown:** `-8.2%` *(Proves the effectiveness of the dynamic stop-loss risk management system during market corrections)*
-- **Win Rate:** `64.5%` *(Based on multi-variable MACD/RSI signal confluence)*
+## 📈 Real-Time Portfolio Analytics
+The dashboard features an integrated math engine that calculates institutional-grade risk metrics in real-time as the bot executes paper/live trades:
+- **Live Sharpe Ratio:** Dynamically calculates annualized risk-adjusted returns based on tick-by-tick equity curve variance.
+- **Max Drawdown:** Monitors peak-to-trough equity drops in real-time to visualize the effectiveness of the dynamic stop-loss system.
+- **Dynamic PnL Tracking:** Millisecond-accurate unrealized and realized profit tracking across all open positions.
 
 ## 📋 Table of Contents
 - [Architecture](#architecture)
