@@ -1,0 +1,55 @@
+type: object
+properties:
+  mode:
+    type: string
+    enum: [paper, live_crypto, live_stocks]
+  interval:
+    type: integer
+  enable_us_stocks:
+    type: boolean
+  enable_in_stocks:
+    type: boolean
+  enable_crypto:
+    type: boolean
+  crypto_assets:
+    type: array
+    items: { type: string }
+  us_stock_assets:
+    type: array
+    items: { type: string }
+  in_stock_assets:
+    type: array
+    items: { type: string }
+  dhan:
+    type: object
+    properties:
+      api_key: { type: string }
+      client_id: { type: string }
+      password: { type: string }
+      access_token: { type: string }
+    required: [api_key, client_id, password, access_token]
+  binance:
+    type: object
+    properties:
+      api_key: { type: string }
+      secret_key: { type: string }
+    required: [api_key, secret_key]
+  alpaca:
+    type: object
+    properties:
+      api_key: { type: string }
+      secret_key: { type: string }
+    required: [api_key, secret_key]
+  alpha_vantage:
+    type: object
+    properties:
+      api_key: { type: string }
+    required: [api_key]
+  # ... add schemas for other sections
+required:
+  - mode
+  - interval
+  - binance
+  - alpaca
+  - alpha_vantage
+  - dhan

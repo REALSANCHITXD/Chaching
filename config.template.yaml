@@ -1,0 +1,44 @@
+mode: paper
+interval: 60
+enable_us_stocks: true
+enable_in_stocks: true
+enable_crypto: true
+crypto_assets:
+- BTCUSDT
+- ETHUSDT
+us_stock_assets:
+- AAPL
+- TSLA
+in_stock_assets:
+- INFY.NS
+- TCS.BO
+binance:
+  api_key: YOUR_BINANCE_KEY
+  secret_key: YOUR_BINANCE_SECRET
+alpaca:
+  api_key: YOUR_ALPACA_KEY
+  secret_key: YOUR_ALPACA_SECRET
+alpha_vantage:
+  api_key: YOUR_ALPHA_VANTAGE_KEY
+dhan:
+  api_key: YOUR_DHAN_API_KEY
+  client_id: YOUR_CLIENT_ID
+  password: YOUR_PASSWORD
+  access_token: YOUR_ACCESS_TOKEN
+cache:
+  memory_ttl: 30
+  redis_url: redis://localhost:6379
+  disk_path: cache/
+monitoring:
+  enable: true
+  interval: 60
+psychology:
+  max_trades_per_day: 15
+  cooldown_after_loss: 3
+risk_management:
+  max_risk_per_trade: 0.02
+  stop_loss_pct: 0.01
+  take_profit_pct: 0.02
+logging:
+  level: INFO
+  file: bot.log

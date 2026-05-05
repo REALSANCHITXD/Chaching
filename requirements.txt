@@ -1,0 +1,14 @@
+alpaca-trade-api
+binance
+Flask
+jsonschema
+pandas
+pandas-market-calendars
+psutil
+pytrends
+pytz
+PyYAML
+redis
+requests
+smartapi-python
+transformers

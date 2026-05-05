@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+.pytest_cache/
+
+# Virtual envs (even if you don't use them now)
+.venv/
+venv/
+ENV/
+env/
+
+# Local runtime artifacts
+cache/
+*.log
+bot.log
+
+# Local configs / secrets
+config.yaml
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/

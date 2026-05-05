@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trading Dashboard</title>
+  <script src="/static/chart.umd.min.js?v=1"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #131722;
+      color: #FFFFFF;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      width: 95%;
+      max-width: 1400px;
+      margin: 20px auto;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #e1e4eb;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .stat {
+      background: #1e2636;
+      padding: 16px 24px;
+      border-radius: 6px;
+      text-align: center;
+      width: 200px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+    .stat h3 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #26a69a;
+    }
+    .stat p {
+      margin: 4px 0 0;
+      font-size: 0.9rem;
+      color: #8393a2;
+    }
+    .charts {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    .chart-card {
+      background: #1e2636;
+      border-radius: 6px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+    .chart-card h2 {
+      margin: 0 0 10px;
+      color: #e1e4eb;
+      font-size: 1.3rem;
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 8px 0 12px;
+      color: #8393a2;
+      font-size: 0.95rem;
+    }
+    #statusBar {
+      margin: 10px 0 0;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: #0f1520;
+      border: 1px solid #2b3546;
+      color: #8393a2;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+    }
+    select {
+      background: #131722;
+      color: #e1e4eb;
+      border: 1px solid #2b3546;
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+    .chart-container {
+      position: relative;
+      height: 400px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Trading Dashboard</h1>
+    <div id="statusBar">Loading…</div>
+    <div class="stats">
+      <div class="stat">
+        <h3 id="total-pnl">0.00</h3>
+        <p>Total Unrealized P&amp;L</p>
+      </div>
+      <div class="stat">
+        <h3 id="sharpe-ratio" style="color: #26a69a;">0.00</h3>
+        <p>Live Sharpe Ratio</p>
+      </div>
+      <div class="stat">
+        <h3 id="max-drawdown" style="color: #ef5350;">0.00%</h3>
+        <p>Max Drawdown</p>
+      </div>
+      <div class="stat">
+        <h3 id="session-status">--</h3>
+        <p>Market Session</p>
+      </div>
+    </div>
+    <div class="charts">
+      <div class="chart-card">
+        <h2>Live Price Chart</h2>
+        <div class="row">
+          <span><strong style="color:#e1e4eb">Symbol</strong></span>
+          <select id="symbolSelect"></select>
+          <span id="latestPrice">--</span>
+          <span id="lastUpdate">--</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="mainChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const statusEl = document.getElementById('statusBar');
+    const showFatal = (msg) => {
+      if (statusEl) statusEl.textContent = `FATAL • ${new Date().toLocaleTimeString()}\n${msg}`;
+    };
+
+    window.addEventListener('error', (e) => {
+      showFatal(e?.message || String(e));
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      showFatal(e?.reason?.message || String(e?.reason || e));
+    });
+
+    let mainChart = null;
+
+    try {
+      if (!window.Chart) throw new Error("Chart.js failed to load (CDN blocked?)");
+      const ctx = document.getElementById("mainChart").getContext("2d");
+      mainChart = new Chart(ctx, {
+        type: "line",
+        data: { labels: [], datasets: [{ label: "Price", data: [], borderColor: '#26a69a', backgroundColor: 'rgba(38, 166, 154, 0.1)', fill: true, tension: 0.2 }] },
+        options: { 
+          plugins: { legend: { display: false } }, 
+          scales: { 
+            x: { ticks: { color: '#8393a2' } }, 
+            y: { ticks: { color: '#8393a2' } } 
+          }, 
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    } catch (e) {
+      showFatal(e?.message || String(e));
+    }
+
+    async function fetchData(endpoint) {
+      const res = await fetch(endpoint, { cache: "no-store" });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(`${endpoint} HTTP ${res.status} ${txt}`.trim());
+      }
+      return res.json();
+    }
+
+    function getSnapshotSymbols(snap) {
+      if (!snap) return [];
+      return Object.keys(snap).filter(k => k !== 'timestamp');
+    }
+
+    function ensureSymbolOptions(symbols) {
+      const sel = document.getElementById('symbolSelect');
+      const current = sel.value || localStorage.getItem('symbol') || 'BTCUSDT';
+      const existing = new Set(Array.from(sel.options).map(o => o.value));
+      let changed = false;
+
+      for (const s of symbols) {
+        if (!existing.has(s)) {
+          const opt = document.createElement('option');
+          opt.value = s;
+          opt.textContent = s;
+          sel.appendChild(opt);
+          changed = true;
+        }
+      }
+
+      if (changed || !sel.value) {
+        const preferred = symbols.includes(current) ? current : (symbols[0] || 'BTCUSDT');
+        sel.value = preferred;
+        localStorage.setItem('symbol', preferred);
+      }
+
+      sel.onchange = () => {
+        localStorage.setItem('symbol', sel.value);
+        if (mainChart) {
+          mainChart.data.labels = [];
+          mainChart.data.datasets[0].data = [];
+          mainChart.update();
+        }
+      };
+    }
+
+    async function updateDashboard() {
+      try {
+        const { pnl, sharpe, drawdown } = await fetchData('/api/pnl');
+        const prices = await fetchData('/api/prices');
+        const session = await fetchData('/api/session');
+
+        document.getElementById('statusBar').textContent = `OK • snapshots: ${prices?.length ?? 0} • ${new Date().toLocaleTimeString()}`;
+
+        const pnlEl = document.getElementById('total-pnl');
+        const pnlVal = parseFloat(pnl) || 0;
+        pnlEl.innerText = pnlVal > 0 ? `+${pnlVal.toFixed(2)}` : pnlVal.toFixed(2);
+        
+        if (pnlVal > 0) pnlEl.style.color = '#26a69a'; // green
+        else if (pnlVal < 0) pnlEl.style.color = '#ef5350'; // red
+        else pnlEl.style.color = '#8393a2'; // gray
+
+        const sharpeEl = document.getElementById('sharpe-ratio');
+        sharpeEl.innerText = sharpe ? sharpe.toFixed(2) : "0.00";
+        if (sharpe > 0) sharpeEl.style.color = '#26a69a';
+        else if (sharpe < 0) sharpeEl.style.color = '#ef5350';
+
+        const drawdownEl = document.getElementById('max-drawdown');
+        drawdownEl.innerText = drawdown ? drawdown.toFixed(2) + '%' : "0.00%";
+
+        if (session && (session.US || session.IN)) {
+          document.getElementById('session-status').innerText = `US: ${session.US ?? '--'} | IN: ${session.IN ?? '--'}`;
+        }
+
+        const lastSnap = prices && prices.length ? prices[prices.length - 1] : null;
+        ensureSymbolOptions(getSnapshotSymbols(lastSnap));
+
+        const symbol = document.getElementById('symbolSelect').value || 'BTCUSDT';
+
+        if (mainChart && prices && prices.length > 0) {
+          const labels = [];
+          const data = [];
+          for (const snap of prices) {
+            const v = snap[symbol];
+            if (snap.timestamp && typeof v === 'number') {
+              labels.push(new Date(snap.timestamp).toLocaleTimeString());
+              data.push(v);
+            }
+          }
+          mainChart.data.labels = labels;
+          mainChart.data.datasets[0].data = data;
+          mainChart.update();
+        }
+
+        if (lastSnap && typeof lastSnap[symbol] === 'number') {
+          document.getElementById('latestPrice').innerText = `${symbol}: $${lastSnap[symbol]}`;
+        } else {
+          document.getElementById('latestPrice').innerText = `${symbol}: --`;
+        }
+        document.getElementById('lastUpdate').innerText = lastSnap?.timestamp ? `Updated: ${new Date(lastSnap.timestamp).toLocaleTimeString()}` : '';
+
+      } catch (e) {
+        document.getElementById('statusBar').textContent = `ERROR • ${new Date().toLocaleTimeString()}\n${e?.message ?? e}`;
+      }
+    }
+
+    setInterval(updateDashboard, 1000);
+    updateDashboard();
+  </script>
+</body>
+</html>
