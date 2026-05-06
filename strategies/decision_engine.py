@@ -3,15 +3,23 @@ class DecisionEngine:
         self.max_risk = risk_cfg.get('max_risk_per_trade', 0.02)
         self.sl_pct = risk_cfg.get('stop_loss_pct', 0.05)
         self.tp_pct = risk_cfg.get('take_profit_pct', 0.10)
+        # If you want the bot to place more frequent paper trades, lower this.
+        self.signal_threshold = float(risk_cfg.get('signal_threshold', 0.0))
 
-    def generate_signals(self, features, sentiment, prices, account_equity=10000, position_sizer=None):
+    def generate_signals(self, features, sentiment, prices, open_positions=None, account_equity=10000, position_sizer=None):
         orders = []
+        open_positions = open_positions or {}
         
         for symbol, metrics in features.items():
             price = prices.get(symbol)
             
             # Skip if we don't have valid price or RSI data
             if not price or metrics.get('rsi') is None:
+                continue
+
+            # Demo-safety: don't keep stacking positions endlessly.
+            # If a position exists for this symbol, skip new entries.
+            if symbol in open_positions:
                 continue
                 
             # Calculate component scores
@@ -33,10 +41,10 @@ class DecisionEngine:
                 qty = (self.max_risk * account_equity) / price
                 
             # Determine direction based on score
-            # (Threshold lowered to 0.05 temporarily so you can see live test trades)
-            if total_score > 0.05:
+            threshold = self.signal_threshold
+            if total_score > threshold:
                 side = 'buy'
-            elif total_score < -0.05:
+            elif total_score < -threshold:
                 side = 'sell'
             else:
                 continue

@@ -55,10 +55,13 @@ class CacheManager:
         disk_file_path = os.path.join(self.disk_path, f"{key}.json")
         if os.path.exists(disk_file_path):
             try:
-                with open(disk_file_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    self.memory_cache[key] = {'data': data, 'time': now}
-                    return data
+                # Only trust disk cache if it's fresh enough.
+                age = now - os.path.getmtime(disk_file_path)
+                if age < current_ttl:
+                    with open(disk_file_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        self.memory_cache[key] = {'data': data, 'time': now}
+                        return data
             except Exception as e:
                 logger.error(f"Disk cache read error for {key}: {e}")
 

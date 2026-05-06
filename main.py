@@ -8,6 +8,7 @@ from functools import partial
 from data_sources.binance_feed import BinanceClient
 from data_sources.alpaca_feed import AlpacaClient
 from data_sources.sentiment_finbert import FinBERTSentiment
+from data_sources.yahoo_feed import YahooClient
 
 from strategies.indicator_logic import IndicatorLogic
 from strategies.decision_engine import DecisionEngine
@@ -42,6 +43,7 @@ class TradingBot:
         # Initialize clients
         self.binance = BinanceClient(self.config.get('binance', {}))
         self.alpaca = AlpacaClient(self.config.get('alpaca', {}))
+        self.yahoo = YahooClient()
         self.sentiment_model = FinBERTSentiment()
         
         # Initialize strategies
@@ -128,6 +130,7 @@ class TradingBot:
                 self.fetcher.fetch_prices, 
                 self.binance, 
                 self.alpaca, 
+                self.yahoo,
                 self.config, 
                 ttl=interval
             )
@@ -139,6 +142,7 @@ class TradingBot:
                 features, 
                 sentiment, 
                 prices,
+                open_positions=self.positions,
                 position_sizer=calculate_position_size
             )
 

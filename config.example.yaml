@@ -46,6 +46,7 @@ sentiment:
 
 risk_management:
   max_risk_per_trade: 0.02
+  signal_threshold: 0.01
   stop_loss_pct: 0.01
   take_profit_pct: 0.02
 
